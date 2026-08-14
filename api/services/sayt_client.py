@@ -34,3 +34,16 @@ class SAYTClient:  # pylint: disable=too-few-public-methods
     def http_client(self) -> httpx.AsyncClient:
         """Return the shared async HTTP client."""
         return self._http_client
+
+    async def suggestions(self, query: str) -> dict:
+        """Get SAYT suggestions for a query."""
+        headers = await self._token_provider.get_headers()
+
+        response = await self._http_client.post(
+            f"{self.base_url}/v1/suggestions",
+            json={"query": query},
+            headers=headers,
+        )
+        response.raise_for_status()
+
+        return response.json()
