@@ -53,6 +53,7 @@ The API supports the following environment variables:
 
 - `GCP_PROJECT_ID`: Google Cloud Project ID
 - `FIRESTORE_DB_ID`: Firestore Database ID
+- `SAYT_SERVICE`: URL of the search as you type suggester service
 - `SIC_VECTOR_STORE`: URL of the vector store service
 - `SIC_VECTOR_STORE_AUTH_ENABLED`: Defaults to True. Set to False when the vector store runs locally or is a side-car deployment alongside the API in Cloud Run
 - `SIC_LOOKUP_DATA_PATH`: Path to SIC lookup data file
