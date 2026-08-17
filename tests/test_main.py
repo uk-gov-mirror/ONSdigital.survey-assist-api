@@ -325,9 +325,11 @@ def test_vector_store_auth_is_configured_per_client(monkeypatch) -> None:
     """Configure authentication independently for each vector store."""
     monkeypatch.setenv("SIC_VECTOR_STORE_AUTH_ENABLED", "true")
     monkeypatch.setenv("SOC_VECTOR_STORE_AUTH_ENABLED", "false")
+    monkeypatch.setenv("SAYT_VECTOR_STORE_AUTH_ENABLED", "false")
 
     assert vector_store_auth_enabled("sic") is True
     assert vector_store_auth_enabled("soc") is False
+    assert vector_store_auth_enabled("sayt") is False
 
 
 @pytest.mark.api
@@ -337,8 +339,13 @@ def test_vector_store_auth_defaults_to_enabled(monkeypatch) -> None:
         "SIC_VECTOR_STORE_AUTH_ENABLED",
         raising=False,
     )
+    monkeypatch.delenv(
+        "SAYT_VECTOR_STORE_AUTH_ENABLED",
+        raising=False,
+    )
 
     assert vector_store_auth_enabled("sic") is True
+    assert vector_store_auth_enabled("sayt") is True
 
 
 @pytest.mark.api
@@ -358,6 +365,7 @@ def test_create_token_provider_uses_client_setting(monkeypatch) -> None:
     """Create the configured token provider for each vector store."""
     monkeypatch.setenv("SIC_VECTOR_STORE_AUTH_ENABLED", "true")
     monkeypatch.setenv("SOC_VECTOR_STORE_AUTH_ENABLED", "false")
+    monkeypatch.setenv("SAYT_VECTOR_STORE_AUTH_ENABLED", "false")
 
     with patch("api.main.GoogleIDTokenProvider") as google_provider:
         sic_provider = create_vector_store_token_provider(
@@ -368,7 +376,12 @@ def test_create_token_provider_uses_client_setting(monkeypatch) -> None:
             "soc",
             "http://localhost:8089",
         )
-
+        sayt_provider = create_vector_store_token_provider(
+            "sayt",
+            "http://localhost:8090",
+        )
+        
     google_provider.assert_called_once_with("https://sic.example")
     assert sic_provider is google_provider.return_value
     assert isinstance(soc_provider, NoAuthTokenProvider)
+    assert isinstance(sayt_provider, NoAuthTokenProvider)
