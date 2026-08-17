@@ -380,7 +380,7 @@ def test_create_token_provider_uses_client_setting(monkeypatch) -> None:
             "sayt",
             "http://localhost:8090",
         )
-        
+
     google_provider.assert_called_once_with("https://sic.example")
     assert sic_provider is google_provider.return_value
     assert isinstance(soc_provider, NoAuthTokenProvider)
