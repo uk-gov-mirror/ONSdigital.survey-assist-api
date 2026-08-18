@@ -38,7 +38,7 @@ For detailed information on installation, setup, and usage, please refer to the 
 - **`SOC_REPHRASE_DATA_PATH`**: Optional path to a rephrased SOC CSV. If unset, packaged example data is used.
 - **`SOC_VECTOR_STORE_AUTH_ENABLED`**: Optional, default is set to True.  Set as False when running the API and Vector Store locally or the Vector Store is a side-car deployment alongside the API in Cloud Run
 - **`SAYT_SERVICE`**: Base URL for the SAYT service (defaults to `http://localhost:8090`).
-- **`SAYT_SERVICE_AUTH_ENABLED`**: Optional, default is set to True. Set as False when running the API and SAYT service locally or the SAYT service is a side-car deployment alongside the API in Cloud Run
+- **`SAYT_VECTOR_STORE_AUTH_ENABLED`**: Optional, default is set to True. Set as False when running the API and SAYT service locally or the SAYT service is a side-car deployment alongside the API in Cloud Run
 - **`FIRESTORE_DB_ID`**: Enables Firestore-backed endpoints when set; if unset, result/feedback endpoints will fail because the Firestore client is not initialised.
 - **`GCP_PROJECT_ID`**: Optional; used when initialising Firestore.
 
