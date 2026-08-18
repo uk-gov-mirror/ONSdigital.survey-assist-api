@@ -26,11 +26,13 @@ from survey_assist_utils.logging import get_logger
 from api.main import (
     app,
     create_vector_store_token_provider,
+    resolve_sayt_service_base_url,
     resolve_sic_vector_store_base_url,
     resolve_soc_vector_store_base_url,
     vector_store_auth_enabled,
 )
 from api.models.embeddings import EMBEDDINGS_STATUS_EXAMPLE
+from api.services.sayt_client import SAYTClient
 from api.services.sic_vector_store_client import SICVectorStoreClient
 from api.services.soc_vector_store_client import SOCVectorStoreClient
 from api.services.token_provider import NoAuthTokenProvider
@@ -95,6 +97,24 @@ logger = get_logger(__name__)
             None,
             "http://localhost:8089",
         ),
+        (
+            "SAYT_SERVICE",
+            resolve_sayt_service_base_url,
+            "  http://sayt.internal:8090  ",
+            "http://sayt.internal:8090",
+        ),
+        (
+            "SAYT_SERVICE",
+            resolve_sayt_service_base_url,
+            "https://sayt.example/",
+            "https://sayt.example",
+        ),
+        (
+            "SAYT_SERVICE",
+            resolve_sayt_service_base_url,
+            None,
+            "http://localhost:8090",
+        ),
     ],
 )
 def test_resolve_vector_store_base_url_uses_expected_value(
@@ -115,11 +135,13 @@ def test_resolve_vector_store_base_url_uses_expected_value(
 
 @pytest.mark.api
 @pytest.mark.asyncio
-async def test_vector_store_clients_share_http_client():
+async def test_service_clients_share_http_client():
     """SIC and SOC vector store clients share one injected HTTP client."""
     shared_http_client = httpx.AsyncClient()
     sic_token_provider = AsyncMock()
     soc_token_provider = AsyncMock()
+    sayt_token_provider = AsyncMock()
+
     try:
         sic_client = SICVectorStoreClient(
             base_url=resolve_sic_vector_store_base_url(),
@@ -131,9 +153,15 @@ async def test_vector_store_clients_share_http_client():
             http_client=shared_http_client,
             token_provider=soc_token_provider,
         )
+        sayt_client = SAYTClient(
+            base_url=resolve_sayt_service_base_url(),
+            http_client=shared_http_client,
+            token_provider=sayt_token_provider,
+        )
 
         assert sic_client.http_client is shared_http_client
         assert soc_client.http_client is shared_http_client
+        assert sayt_client.http_client is shared_http_client
     finally:
         await shared_http_client.aclose()
 
@@ -297,9 +325,11 @@ def test_vector_store_auth_is_configured_per_client(monkeypatch) -> None:
     """Configure authentication independently for each vector store."""
     monkeypatch.setenv("SIC_VECTOR_STORE_AUTH_ENABLED", "true")
     monkeypatch.setenv("SOC_VECTOR_STORE_AUTH_ENABLED", "false")
+    monkeypatch.setenv("SAYT_VECTOR_STORE_AUTH_ENABLED", "false")
 
     assert vector_store_auth_enabled("sic") is True
     assert vector_store_auth_enabled("soc") is False
+    assert vector_store_auth_enabled("sayt") is False
 
 
 @pytest.mark.api
@@ -309,8 +339,13 @@ def test_vector_store_auth_defaults_to_enabled(monkeypatch) -> None:
         "SIC_VECTOR_STORE_AUTH_ENABLED",
         raising=False,
     )
+    monkeypatch.delenv(
+        "SAYT_VECTOR_STORE_AUTH_ENABLED",
+        raising=False,
+    )
 
     assert vector_store_auth_enabled("sic") is True
+    assert vector_store_auth_enabled("sayt") is True
 
 
 @pytest.mark.api
@@ -330,6 +365,7 @@ def test_create_token_provider_uses_client_setting(monkeypatch) -> None:
     """Create the configured token provider for each vector store."""
     monkeypatch.setenv("SIC_VECTOR_STORE_AUTH_ENABLED", "true")
     monkeypatch.setenv("SOC_VECTOR_STORE_AUTH_ENABLED", "false")
+    monkeypatch.setenv("SAYT_VECTOR_STORE_AUTH_ENABLED", "false")
 
     with patch("api.main.GoogleIDTokenProvider") as google_provider:
         sic_provider = create_vector_store_token_provider(
@@ -340,7 +376,12 @@ def test_create_token_provider_uses_client_setting(monkeypatch) -> None:
             "soc",
             "http://localhost:8089",
         )
+        sayt_provider = create_vector_store_token_provider(
+            "sayt",
+            "http://localhost:8090",
+        )
 
     google_provider.assert_called_once_with("https://sic.example")
     assert sic_provider is google_provider.return_value
     assert isinstance(soc_provider, NoAuthTokenProvider)
+    assert isinstance(sayt_provider, NoAuthTokenProvider)

@@ -21,6 +21,7 @@ from survey_assist_utils.logging import get_logger
 
 from api.main import app
 from api.models.embeddings import EMBEDDINGS_STATUS_EXAMPLE
+from api.services.sayt_client import SAYTClient
 from api.services.sic_lookup_client import SICLookupClient
 from api.services.sic_rephrase_client import SICRephraseClient
 from api.services.sic_vector_store_client import SICVectorStoreClient
@@ -86,6 +87,9 @@ def pytest_configure(config):  # pylint: disable=unused-argument
     app.state.soc_rephrase_client = mock_soc_rephrase_client
     app.state.sic_vector_store_client = mock_sic_vector_store_client
     app.state.soc_vector_store_client = mock_soc_vector_store_client
+
+    mock_sayt_client = MagicMock(spec=SAYTClient)
+    app.state.sayt_client = mock_sayt_client
 
     logger.info("Global Test Configuration Applied")
 

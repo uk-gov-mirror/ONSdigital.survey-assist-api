@@ -24,6 +24,7 @@ from api.routes.v1.result import router as result_router
 from api.routes.v1.sic_lookup import router as sic_lookup_router
 from api.routes.v1.soc_lookup import router as soc_lookup_router
 from api.services.firestore_client import init_firestore_client
+from api.services.sayt_client import SAYTClient
 from api.services.sic_lookup_client import SICLookupClient
 from api.services.sic_rephrase_client import SICRephraseClient
 from api.services.sic_vector_store_client import SICVectorStoreClient
@@ -40,6 +41,7 @@ logger = get_logger(__name__)
 
 DEFAULT_SIC_VECTOR_STORE_URL = "http://localhost:8088"
 DEFAULT_SOC_VECTOR_STORE_URL = "http://localhost:8089"
+DEFAULT_SAYT_SERVICE_URL = "http://localhost:8090"
 
 
 def vector_store_auth_enabled(vector_store_name: str) -> bool:
@@ -96,6 +98,23 @@ def resolve_soc_vector_store_base_url() -> str:
         "SOC_VECTOR_STORE environment variable not set, using default localhost URL"
     )
     return DEFAULT_SOC_VECTOR_STORE_URL
+
+
+def resolve_sayt_service_base_url() -> str:
+    """Resolve the SAYT service base URL from environment or default."""
+    env_url = os.getenv("SAYT_SERVICE")
+
+    if env_url and env_url.strip():
+        logger.info(
+            f"Using SAYT service URL from environment: "
+            f"{env_url.strip().rstrip('/')}"
+        )
+        return env_url.strip().rstrip("/")
+
+    logger.warning(
+        "SAYT_SERVICE environment variable not set, using default localhost URL"
+    )
+    return DEFAULT_SAYT_SERVICE_URL
 
 
 @asynccontextmanager
@@ -163,9 +182,11 @@ async def lifespan(fastapi_app: FastAPI):
 
     sic_url = resolve_sic_vector_store_base_url()
     soc_url = resolve_soc_vector_store_base_url()
+    sayt_url = resolve_sayt_service_base_url()
 
     sic_token_provider = create_vector_store_token_provider("sic", sic_url)
     soc_token_provider = create_vector_store_token_provider("soc", soc_url)
+    sayt_token_provider = create_vector_store_token_provider("sayt", sayt_url)
 
     # Create SIC and SOC vector store clients with shared HTTP client and
     # separate token providers
@@ -180,6 +201,13 @@ async def lifespan(fastapi_app: FastAPI):
         http_client=shared_http_client,
         token_provider=soc_token_provider,
     )
+
+    fastapi_app.state.sayt_client = SAYTClient(
+        base_url=sayt_url,
+        http_client=shared_http_client,
+        token_provider=sayt_token_provider,
+    )
+
     logger.info(
         "Application clients initialised",
         sic_llm=type(fastapi_app.state.gemini_llm).__name__,
@@ -200,10 +228,12 @@ async def lifespan(fastapi_app: FastAPI):
         soc_vector_store_client=type(
             fastapi_app.state.soc_vector_store_client
         ).__name__,
+        sayt_client=type(fastapi_app.state.sayt_client).__name__,
         http_client=type(shared_http_client).__name__,
         vector_store_http_client_shared=str(
             fastapi_app.state.sic_vector_store_client.http_client
             is fastapi_app.state.soc_vector_store_client.http_client
+            is fastapi_app.state.sayt_client.http_client
         ),
     )
 
