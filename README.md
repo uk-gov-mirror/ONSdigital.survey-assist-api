@@ -54,7 +54,7 @@ The API supports the following environment variables:
 - `GCP_PROJECT_ID`: Google Cloud Project ID
 - `FIRESTORE_DB_ID`: Firestore Database ID
 - `SAYT_SERVICE`: URL of the search-as-you-type service
-- `SAYT_SERVICE_AUTH_ENABLED`: Defaults to True. Set to False when the SAYT service runs locally or is a side-car deployment alongside the API in Cloud Run
+- `SAYT_VECTOR_STORE_AUTH_ENABLED`: Defaults to True. Set to False when the SAYT service runs locally or is a side-car deployment alongside the API in Cloud Run
 - `SIC_VECTOR_STORE`: URL of the vector store service
 - `SIC_VECTOR_STORE_AUTH_ENABLED`: Defaults to True. Set to False when the vector store runs locally or is a side-car deployment alongside the API in Cloud Run
 - `SIC_LOOKUP_DATA_PATH`: Path to SIC lookup data file
@@ -75,7 +75,7 @@ To run the Survey Assist API **locally** and the SIC and SOC vector stores or SA
 - Set the services you want running in GCP to have auth enabled:
   - ```export SOC_VECTOR_STORE_AUTH_ENABLED=true```
   - ```export SIC_VECTOR_STORE_AUTH_ENABLED=true```
-  - ```export SAYT_SERVICE_AUTH_ENABLED=true```
+  - ```export SAYT_VECTOR_STORE_AUTH_ENABLED=true```
 - Set one or both services GCP URL (see cloud run details in console):
   - ```export SIC_VECTOR_STORE=https://URL-TO-SIC-VECTOR-SERVICE```
   - ```export SOC_VECTOR_STORE=https://URL-TO-SOC-VECTOR-SERVICE```
@@ -89,7 +89,7 @@ To run the Survey Assist API, SIC and SOC vector stores in **locally** you must:
   - ```export SOC_VECTOR_STORE_AUTH_ENABLED=false```
   - ```export SIC_VECTOR_STORE_AUTH_ENABLED=false```
 - Set SAYT service to have auth disabled:
-  - ```export SAYT_SERVICE_AUTH_ENABLED=false```
+  - ```export SAYT_VECTOR_STORE_AUTH_ENABLED=false```
 - By default the API will assume the vector store is local:
   - ```unset SIC_VECTOR_STORE```
   - ```unset SOC_VECTOR_STORE```
