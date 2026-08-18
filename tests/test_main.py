@@ -25,10 +25,12 @@ from survey_assist_utils.logging import get_logger
 
 from api.main import (
     app,
+    create_sayt_token_provider,
     create_vector_store_token_provider,
     resolve_sayt_service_base_url,
     resolve_sic_vector_store_base_url,
     resolve_soc_vector_store_base_url,
+    sayt_service_auth_enabled,
     vector_store_auth_enabled,
 )
 from api.models.embeddings import EMBEDDINGS_STATUS_EXAMPLE
@@ -112,6 +114,12 @@ logger = get_logger(__name__)
         (
             "SAYT_SERVICE",
             resolve_sayt_service_base_url,
+            "  https://sayt.example///  ",
+            "https://sayt.example",
+        ),
+        (
+            "SAYT_SERVICE",
+            resolve_sayt_service_base_url,
             None,
             "http://localhost:8090",
         ),
@@ -136,12 +144,11 @@ def test_resolve_vector_store_base_url_uses_expected_value(
 @pytest.mark.api
 @pytest.mark.asyncio
 async def test_service_clients_share_http_client():
-    """SIC and SOC vector store clients share one injected HTTP client."""
+    """SIC, SOC, and SAYT clients share one injected HTTP client."""
     shared_http_client = httpx.AsyncClient()
     sic_token_provider = AsyncMock()
     soc_token_provider = AsyncMock()
     sayt_token_provider = AsyncMock()
-
     try:
         sic_client = SICVectorStoreClient(
             base_url=resolve_sic_vector_store_base_url(),
@@ -385,3 +392,44 @@ def test_create_token_provider_uses_client_setting(monkeypatch) -> None:
     assert sic_provider is google_provider.return_value
     assert isinstance(soc_provider, NoAuthTokenProvider)
     assert isinstance(sayt_provider, NoAuthTokenProvider)
+
+
+@pytest.mark.api
+def test_sayt_service_auth_defaults_to_enabled(monkeypatch) -> None:
+    """SAYT authentication is enabled by default if the environment variable is not set."""
+    monkeypatch.delenv("SAYT_SERVICE_AUTH_ENABLED", raising=False)
+
+    assert sayt_service_auth_enabled() is True
+
+
+@pytest.mark.api
+def test_sayt_service_auth_can_be_disabled(monkeypatch) -> None:
+    """Disable SAYT authentication with SAYT_SERVICE_AUTH_ENABLED."""
+    monkeypatch.setenv("SAYT_SERVICE_AUTH_ENABLED", "false")
+
+    assert sayt_service_auth_enabled() is False
+    assert isinstance(
+        create_sayt_token_provider("http://localhost:8090"),
+        NoAuthTokenProvider,
+    )
+
+
+@pytest.mark.api
+def test_create_sayt_token_provider_uses_google_when_enabled(monkeypatch) -> None:
+    """Use Google ID tokens when SAYT service auth is enabled."""
+    monkeypatch.setenv("SAYT_SERVICE_AUTH_ENABLED", "true")
+
+    with patch("api.main.GoogleIDTokenProvider") as google_provider:
+        provider = create_sayt_token_provider("https://sayt.example")
+
+    google_provider.assert_called_once_with("https://sayt.example")
+    assert provider is google_provider.return_value
+
+
+@pytest.mark.api
+def test_sayt_service_auth_rejects_invalid_value(monkeypatch) -> None:
+    """Raise ValueError if SAYT_SERVICE_AUTH_ENABLED is invalid."""
+    monkeypatch.setenv("SAYT_SERVICE_AUTH_ENABLED", "invalid")
+
+    with pytest.raises(ValueError, match="SAYT_SERVICE_AUTH_ENABLED"):
+        sayt_service_auth_enabled()
