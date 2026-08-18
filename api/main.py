@@ -23,6 +23,7 @@ from api.routes.v1.feedback import router as feedback_router
 from api.routes.v1.result import router as result_router
 from api.routes.v1.sic_lookup import router as sic_lookup_router
 from api.routes.v1.soc_lookup import router as soc_lookup_router
+from api.routes.v1.suggestions import router as suggestions_router
 from api.services.firestore_client import init_firestore_client
 from api.services.sayt_client import SAYTClient
 from api.services.sic_lookup_client import SICLookupClient
@@ -100,14 +101,33 @@ def resolve_soc_vector_store_base_url() -> str:
     return DEFAULT_SOC_VECTOR_STORE_URL
 
 
+def sayt_service_auth_enabled() -> bool:
+    """Return whether authentication is enabled for the SAYT service."""
+    env_var = "SAYT_SERVICE_AUTH_ENABLED"
+    value = os.getenv(env_var, "true").strip().lower()
+
+    if value not in {"true", "false"}:
+        raise ValueError(f"{env_var} must be 'true' or 'false'")
+
+    return value == "true"
+
+
+def create_sayt_token_provider(base_url: str) -> TokenProvider:
+    """Create the configured token provider for the SAYT service."""
+    if sayt_service_auth_enabled():
+        logger.info("SAYT service auth enabled")
+        return GoogleIDTokenProvider(base_url)
+
+    logger.warning("SAYT service auth disabled")
+    return NoAuthTokenProvider()
+
+
 def resolve_sayt_service_base_url() -> str:
     """Resolve the SAYT service base URL from environment or default."""
     env_url = os.getenv("SAYT_SERVICE")
-
     if env_url and env_url.strip():
         logger.info(
-            f"Using SAYT service URL from environment: "
-            f"{env_url.strip().rstrip('/')}"
+            f"Using SAYT service URL from environment: {env_url.strip().rstrip('/')}"
         )
         return env_url.strip().rstrip("/")
 
@@ -186,7 +206,7 @@ async def lifespan(fastapi_app: FastAPI):
 
     sic_token_provider = create_vector_store_token_provider("sic", sic_url)
     soc_token_provider = create_vector_store_token_provider("soc", soc_url)
-    sayt_token_provider = create_vector_store_token_provider("sayt", sayt_url)
+    sayt_token_provider = create_sayt_token_provider(sayt_url)
 
     # Create SIC and SOC vector store clients with shared HTTP client and
     # separate token providers
@@ -207,7 +227,6 @@ async def lifespan(fastapi_app: FastAPI):
         http_client=shared_http_client,
         token_provider=sayt_token_provider,
     )
-
     logger.info(
         "Application clients initialised",
         sic_llm=type(fastapi_app.state.gemini_llm).__name__,
@@ -258,6 +277,7 @@ app.include_router(config_router, prefix="/v1/survey-assist")
 app.include_router(embeddings_router, prefix="/v1/survey-assist")
 app.include_router(sic_lookup_router, prefix="/v1/survey-assist")
 app.include_router(soc_lookup_router, prefix="/v1/survey-assist")
+app.include_router(suggestions_router, prefix="/v1/survey-assist")
 app.include_router(classify_router, prefix="/v1/survey-assist")
 app.include_router(result_router, prefix="/v1/survey-assist")
 app.include_router(feedback_router, prefix="/v1/survey-assist")
