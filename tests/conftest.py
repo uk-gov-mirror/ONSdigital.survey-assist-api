@@ -89,6 +89,7 @@ def pytest_configure(config):  # pylint: disable=unused-argument
     app.state.soc_vector_store_client = mock_soc_vector_store_client
 
     mock_sayt_client = MagicMock(spec=SAYTClient)
+    mock_sayt_client.suggest = AsyncMock(return_value=[])
     app.state.sayt_client = mock_sayt_client
 
     logger.info("Global Test Configuration Applied")
