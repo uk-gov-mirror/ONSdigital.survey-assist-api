@@ -703,7 +703,7 @@ curl -i "http://localhost:8080/v1/survey-assist/soc-lookup?description=senior%20
   - `limit` (optional): max suggestions; omit to use the SAYT service default
   - `include_scores` (optional, default `false`): include `score` on each suggestion when `true`
 - **Response**: `{ "suggestions": [ { "display_text": "Soft drinks manufacturing" } ] }`. When `include_scores` is `true`, each item also has `"score"`. There is no separate `code` field.
-- **Downstream**: `POST {SAYT_SERVICE}/v1/suggestions` with `{ "query", "limit"? }` only. Default local URL is `http://localhost:8090`. Set `SAYT_SERVICE_AUTH_ENABLED=false` for local unauthenticated runs.
+- **Downstream**: `POST {SAYT_SERVICE}/v1/suggestions` with `{ "query", "limit"? }` only. Default local URL is `http://localhost:8090`. Set `SAYT_VECTOR_STORE_AUTH_ENABLED=false` for local unauthenticated runs.
 
 #### Example usage
 
