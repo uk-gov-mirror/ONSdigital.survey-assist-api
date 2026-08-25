@@ -15,7 +15,12 @@ class SuggestionsRequest(BaseModel):
     """Payload for the public suggestions route."""
 
     type: SuggestionType = Field(..., description="Suggestion source")
-    query: str = Field(..., min_length=1, description="Text the user typed")
+    query: str = Field(
+        ...,
+        min_length=1,
+        max_length=100,
+        description="Text the user typed (maximum 100 characters)",
+    )
     limit: int | None = Field(
         default=None,
         gt=0,
