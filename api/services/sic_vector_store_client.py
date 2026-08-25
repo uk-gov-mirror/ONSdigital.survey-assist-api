@@ -1,7 +1,7 @@
 """Vector store client service for SIC classification in the Survey Assist API.
 
-This module provides a client for the SIC vector store service, which is used to
-check the status of the SIC embeddings and perform similarity searches.
+This module provides a client for a SIC instance of ``survey-assist-vector-store-api``,
+used to check embedding configuration and perform similarity searches.
 """
 
 import httpx
@@ -48,7 +48,7 @@ class SICVectorStoreClient(
         Returns:
             str: The SIC vector store status endpoint URL.
         """
-        return f"{self.base_url}/v1/sic-vector-store/status"
+        return f"{self.base_url}/v1/configuration"
 
     def get_search_url(self) -> str:
         """Get the SIC vector store search endpoint URL.
@@ -56,7 +56,7 @@ class SICVectorStoreClient(
         Returns:
             str: The SIC vector store search endpoint URL.
         """
-        return f"{self.base_url}/v1/sic-vector-store/search-index"
+        return f"{self.base_url}/v1/search-index"
 
     def get_service_name(self) -> str:
         """Get the SIC vector store service name for logging.
