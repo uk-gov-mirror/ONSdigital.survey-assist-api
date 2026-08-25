@@ -42,16 +42,12 @@ logger = get_logger(__name__)
 
 DEFAULT_SIC_VECTOR_STORE_URL = "http://localhost:8088"
 DEFAULT_SOC_VECTOR_STORE_URL = "http://localhost:8089"
-DEFAULT_SAYT_SERVICE_URL = "http://localhost:8090"
+DEFAULT_SAYT_VECTOR_STORE_URL = "http://localhost:8090"
 
 
-def service_auth_enabled(service_name: str) -> bool:
-    """Return whether authentication is enabled for a downstream service.
-
-    Reads ``{SERVICE_NAME}_VECTOR_STORE_AUTH_ENABLED`` (default ``true``) so SIC,
-    SOC, and SAYT share one flag pattern.
-    """
-    env_var = f"{service_name.upper()}_VECTOR_STORE_AUTH_ENABLED"
+def vector_store_auth_enabled(vector_store_name: str) -> bool:
+    """Return whether authentication is enabled for a vector store."""
+    env_var = f"{vector_store_name.upper()}_VECTOR_STORE_AUTH_ENABLED"
     value = os.getenv(env_var, "true").strip().lower()
 
     if value not in {"true", "false"}:
@@ -60,18 +56,18 @@ def service_auth_enabled(service_name: str) -> bool:
     return value == "true"
 
 
-def create_service_token_provider(
-    service_name: str,
+def create_vector_store_token_provider(
+    vector_store_name: str,
     base_url: str,
 ) -> TokenProvider:
-    """Create the configured token provider for a downstream service."""
-    name = service_name.upper()
+    """Create the configured token provider for a vector store."""
+    service_name = vector_store_name.upper()
 
-    if service_auth_enabled(service_name):
-        logger.info(f"{name} service auth enabled")
+    if vector_store_auth_enabled(vector_store_name):
+        logger.info(f"{service_name} vector store auth enabled")
         return GoogleIDTokenProvider(base_url)
 
-    logger.warning(f"{name} service auth disabled")
+    logger.warning(f"{service_name} vector store auth disabled")
     return NoAuthTokenProvider()
 
 
@@ -105,19 +101,20 @@ def resolve_soc_vector_store_base_url() -> str:
     return DEFAULT_SOC_VECTOR_STORE_URL
 
 
-def resolve_sayt_service_base_url() -> str:
-    """Resolve the SAYT service base URL from environment or default."""
-    env_url = os.getenv("SAYT_SERVICE")
+def resolve_sayt_vector_store_base_url() -> str:
+    """Resolve the SAYT vector store base URL from environment or default."""
+    env_url = os.getenv("SAYT_VECTOR_STORE")
     if env_url and env_url.strip():
         logger.info(
-            f"Using SAYT service URL from environment: {env_url.strip().rstrip('/')}"
+            f"Using SAYT vector store URL from environment: "
+            f"{env_url.strip().rstrip('/')}"
         )
         return env_url.strip().rstrip("/")
 
     logger.warning(
-        "SAYT_SERVICE environment variable not set, using default localhost URL"
+        "SAYT_VECTOR_STORE environment variable not set, using default localhost URL"
     )
-    return DEFAULT_SAYT_SERVICE_URL
+    return DEFAULT_SAYT_VECTOR_STORE_URL
 
 
 @asynccontextmanager
@@ -185,11 +182,11 @@ async def lifespan(fastapi_app: FastAPI):
 
     sic_url = resolve_sic_vector_store_base_url()
     soc_url = resolve_soc_vector_store_base_url()
-    sayt_url = resolve_sayt_service_base_url()
+    sayt_url = resolve_sayt_vector_store_base_url()
 
-    sic_token_provider = create_service_token_provider("sic", sic_url)
-    soc_token_provider = create_service_token_provider("soc", soc_url)
-    sayt_token_provider = create_service_token_provider("sayt", sayt_url)
+    sic_token_provider = create_vector_store_token_provider("sic", sic_url)
+    soc_token_provider = create_vector_store_token_provider("soc", soc_url)
+    sayt_token_provider = create_vector_store_token_provider("sayt", sayt_url)
 
     # Create SIC and SOC vector store clients with shared HTTP client and
     # separate token providers
