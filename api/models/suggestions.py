@@ -24,7 +24,8 @@ class SuggestionsRequest(BaseModel):
     limit: int | None = Field(
         default=None,
         gt=0,
-        description="Optional maximum number of suggestions",
+        le=50,
+        description="Optional maximum number of suggestions (maximum 50)",
     )
     include_scores: bool = Field(
         default=False,
