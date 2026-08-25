@@ -28,14 +28,16 @@ For detailed information on installation, setup, and usage, please refer to the 
 
 ## Configuration
 
-- **`SIC_VECTOR_STORE`**: Base URL for the SIC vector store (defaults to `http://localhost:8088`).
+- **`SIC_VECTOR_STORE`**: Base URL for a SIC instance of `survey-assist-vector-store-api` (defaults to `http://localhost:8088`).
 - **`SIC_LOOKUP_DATA_PATH`**: Optional path to a SIC lookup CSV. If unset, packaged example data is used.
 - **`SIC_REPHRASE_DATA_PATH`**: Optional path to a rephrased SIC CSV. If unset, packaged example data is used.
 - **`SIC_VECTOR_STORE_AUTH_ENABLED`**: Optional, default is set to True.  Set as False when running the API and Vector Store locally or the Vector Store is a side-car deployment alongside the API in Cloud Run
-- **`SOC_VECTOR_STORE`**: Base URL for the SOC vector store (defaults to `http://localhost:8089`).
+- **`SOC_VECTOR_STORE`**: Base URL for a SOC instance of `survey-assist-vector-store-api` (defaults to `http://localhost:8089`).
 - **`SOC_LOOKUP_DATA_PATH`**: Optional path to a SOC lookup CSV. If unset, packaged example data is used.
 - **`SOC_REPHRASE_DATA_PATH`**: Optional path to a rephrased SOC CSV. If unset, packaged example data is used.
 - **`SOC_VECTOR_STORE_AUTH_ENABLED`**: Optional, default is set to True.  Set as False when running the API and Vector Store locally or the Vector Store is a side-car deployment alongside the API in Cloud Run
+- **`SAYT_SERVICE`**: Base URL for the SAYT service from `survey-assist-vector-store-api` (defaults to `http://localhost:8090`).
+- **`SAYT_VECTOR_STORE_AUTH_ENABLED`**: Optional, default is set to True. Set as False when running the API and SAYT service locally or the SAYT service is a side-car deployment alongside the API in Cloud Run
 - **`FIRESTORE_DB_ID`**: Enables Firestore-backed endpoints when set; if unset, result/feedback endpoints will fail because the Firestore client is not initialised.
 - **`GCP_PROJECT_ID`**: Optional; used when initialising Firestore.
 
