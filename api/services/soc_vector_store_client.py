@@ -1,7 +1,7 @@
 """Vector store client service for SOC classification in the Survey Assist API.
 
-This module provides a client for the SOC vector store service, which is used to
-check the status of the SOC embeddings and perform similarity searches.
+This module provides a client for a SOC instance of ``survey-assist-vector-store-api``,
+used to check embedding configuration and perform similarity searches.
 """
 
 import httpx
@@ -49,7 +49,7 @@ class SOCVectorStoreClient(
         Returns:
             str: The SOC vector store status endpoint URL.
         """
-        return f"{self.base_url}/v1/soc-vector-store/status"
+        return f"{self.base_url}/v1/configuration"
 
     def get_search_url(self) -> str:
         """Get the SOC vector store search endpoint URL.
@@ -57,7 +57,7 @@ class SOCVectorStoreClient(
         Returns:
             str: The SOC vector store search endpoint URL.
         """
-        return f"{self.base_url}/v1/soc-vector-store/search-index"
+        return f"{self.base_url}/v1/search-index"
 
     def get_service_name(self) -> str:
         """Get the SOC vector store service name for logging.
