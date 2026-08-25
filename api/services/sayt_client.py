@@ -141,7 +141,7 @@ class SAYTClient:
             )
             raise HTTPException(
                 status_code=HTTPStatus.SERVICE_UNAVAILABLE,
-                detail=f"Failed to search SAYT service: {e!s}",
+                detail="Service is unavailable",
             ) from e
 
         except Exception as e:  # pylint: disable=broad-exception-caught
@@ -153,5 +153,5 @@ class SAYTClient:
             )
             raise HTTPException(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-                detail=f"Unexpected error searching SAYT service: {e!s}",
+                detail="Unexpected internal error",
             ) from e
