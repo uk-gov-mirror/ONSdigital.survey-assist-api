@@ -699,8 +699,8 @@ curl -i "http://localhost:8080/v1/survey-assist/soc-lookup?description=senior%20
 - **Description**: Returns typeahead suggestions from the SAYT service. This ticket supports `type: "sic"` only.
 - **Request body**:
   - `type` (required): suggestion source, currently `"sic"`
-  - `query` (required): text the user typed (1–100 characters; longer values return 422)
-  - `limit` (optional): max suggestions; omit to use the SAYT service default
+  - `query` (required): text the user typed (1–100 characters, longer values return 422)
+  - `limit` (optional): max suggestions 1–50, omit to use the SAYT service default, values over 50 return 422
   - `include_scores` (optional, default `false`): include `score` on each suggestion when `true`
 - **Response**: `{ "suggestions": [ { "display_text": "Soft drinks manufacturing" } ] }`. When `include_scores` is `true`, each item also has `"score"`. There is no separate `code` field.
 - **Downstream**: `POST {SAYT_VECTOR_STORE}/v1/suggestions` with `{ "query", "limit"? }` only. Default local URL is `http://localhost:8090`. Set `SAYT_VECTOR_STORE_AUTH_ENABLED=false` for local unauthenticated runs.
