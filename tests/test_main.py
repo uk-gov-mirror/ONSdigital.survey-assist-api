@@ -25,11 +25,11 @@ from survey_assist_utils.logging import get_logger
 
 from api.main import (
     app,
-    create_service_token_provider,
-    resolve_sayt_service_base_url,
+    create_vector_store_token_provider,
+    resolve_sayt_vector_store_base_url,
     resolve_sic_vector_store_base_url,
     resolve_soc_vector_store_base_url,
-    service_auth_enabled,
+    vector_store_auth_enabled,
 )
 from api.models.embeddings import EMBEDDINGS_STATUS_EXAMPLE
 from api.services.sayt_client import SAYTClient
@@ -98,26 +98,26 @@ logger = get_logger(__name__)
             "http://localhost:8089",
         ),
         (
-            "SAYT_SERVICE",
-            resolve_sayt_service_base_url,
+            "SAYT_VECTOR_STORE",
+            resolve_sayt_vector_store_base_url,
             "  http://sayt.internal:8090  ",
             "http://sayt.internal:8090",
         ),
         (
-            "SAYT_SERVICE",
-            resolve_sayt_service_base_url,
+            "SAYT_VECTOR_STORE",
+            resolve_sayt_vector_store_base_url,
             "https://sayt.example/",
             "https://sayt.example",
         ),
         (
-            "SAYT_SERVICE",
-            resolve_sayt_service_base_url,
+            "SAYT_VECTOR_STORE",
+            resolve_sayt_vector_store_base_url,
             "  https://sayt.example///  ",
             "https://sayt.example",
         ),
         (
-            "SAYT_SERVICE",
-            resolve_sayt_service_base_url,
+            "SAYT_VECTOR_STORE",
+            resolve_sayt_vector_store_base_url,
             None,
             "http://localhost:8090",
         ),
@@ -159,7 +159,7 @@ async def test_service_clients_share_http_client():
             token_provider=soc_token_provider,
         )
         sayt_client = SAYTClient(
-            base_url=resolve_sayt_service_base_url(),
+            base_url=resolve_sayt_vector_store_base_url(),
             http_client=shared_http_client,
             token_provider=sayt_token_provider,
         )
@@ -326,19 +326,19 @@ def test_embeddings_endpoint(test_client):
 
 
 @pytest.mark.api
-def test_service_auth_is_configured_per_client(monkeypatch) -> None:
-    """Configure authentication independently for each service."""
+def test_vector_store_auth_is_configured_per_client(monkeypatch) -> None:
+    """Configure authentication independently for each vector store."""
     monkeypatch.setenv("SIC_VECTOR_STORE_AUTH_ENABLED", "true")
     monkeypatch.setenv("SOC_VECTOR_STORE_AUTH_ENABLED", "false")
     monkeypatch.setenv("SAYT_VECTOR_STORE_AUTH_ENABLED", "false")
 
-    assert service_auth_enabled("sic") is True
-    assert service_auth_enabled("soc") is False
-    assert service_auth_enabled("sayt") is False
+    assert vector_store_auth_enabled("sic") is True
+    assert vector_store_auth_enabled("soc") is False
+    assert vector_store_auth_enabled("sayt") is False
 
 
 @pytest.mark.api
-def test_service_auth_defaults_to_enabled(monkeypatch) -> None:
+def test_vector_store_auth_defaults_to_enabled(monkeypatch) -> None:
     """Authentication is enabled by default if the environment variable is not set."""
     monkeypatch.delenv(
         "SIC_VECTOR_STORE_AUTH_ENABLED",
@@ -349,12 +349,12 @@ def test_service_auth_defaults_to_enabled(monkeypatch) -> None:
         raising=False,
     )
 
-    assert service_auth_enabled("sic") is True
-    assert service_auth_enabled("sayt") is True
+    assert vector_store_auth_enabled("sic") is True
+    assert vector_store_auth_enabled("sayt") is True
 
 
 @pytest.mark.api
-def test_service_auth_rejects_invalid_value(monkeypatch) -> None:
+def test_vector_store_auth_rejects_invalid_value(monkeypatch) -> None:
     """Raise ValueError if the environment variable is set to an invalid value."""
     monkeypatch.setenv("SIC_VECTOR_STORE_AUTH_ENABLED", "invalid")
 
@@ -362,26 +362,26 @@ def test_service_auth_rejects_invalid_value(monkeypatch) -> None:
         ValueError,
         match="SIC_VECTOR_STORE_AUTH_ENABLED",
     ):
-        service_auth_enabled("sic")
+        vector_store_auth_enabled("sic")
 
 
 @pytest.mark.api
 def test_create_token_provider_uses_client_setting(monkeypatch) -> None:
-    """Create the configured token provider for each service."""
+    """Create the configured token provider for each vector store."""
     monkeypatch.setenv("SIC_VECTOR_STORE_AUTH_ENABLED", "true")
     monkeypatch.setenv("SOC_VECTOR_STORE_AUTH_ENABLED", "false")
     monkeypatch.setenv("SAYT_VECTOR_STORE_AUTH_ENABLED", "false")
 
     with patch("api.main.GoogleIDTokenProvider") as google_provider:
-        sic_provider = create_service_token_provider(
+        sic_provider = create_vector_store_token_provider(
             "sic",
             "https://sic.example",
         )
-        soc_provider = create_service_token_provider(
+        soc_provider = create_vector_store_token_provider(
             "soc",
             "http://localhost:8089",
         )
-        sayt_provider = create_service_token_provider(
+        sayt_provider = create_vector_store_token_provider(
             "sayt",
             "http://localhost:8090",
         )
