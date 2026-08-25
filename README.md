@@ -53,8 +53,8 @@ The API supports the following environment variables:
 
 - `GCP_PROJECT_ID`: Google Cloud Project ID
 - `FIRESTORE_DB_ID`: Firestore Database ID
-- `SAYT_SERVICE`: URL of the search-as-you-type service
-- `SAYT_VECTOR_STORE_AUTH_ENABLED`: Defaults to True. Set to False when the SAYT service runs locally or is a side-car deployment alongside the API in Cloud Run
+- `SAYT_VECTOR_STORE`: URL of the search-as-you-type vector store service
+- `SAYT_VECTOR_STORE_AUTH_ENABLED`: Defaults to True. Set to False when the SAYT vector store runs locally or is a side-car deployment alongside the API in Cloud Run
 - `SIC_VECTOR_STORE`: URL of the vector store service
 - `SIC_VECTOR_STORE_AUTH_ENABLED`: Defaults to True. Set to False when the vector store runs locally or is a side-car deployment alongside the API in Cloud Run
 - `SIC_LOOKUP_DATA_PATH`: Path to SIC lookup data file
@@ -66,7 +66,7 @@ The API supports the following environment variables:
 
 ##### Survey Assist running locally, one or more vector services running in GCP
 
-To run the Survey Assist API **locally** and the SIC and SOC vector stores or SAYT service in **GCP** you must:
+To run the Survey Assist API **locally** and the SIC and SOC vector stores or SAYT vector store in **GCP** you must:
 
 - Have the Service Account Token Creator role on your developer IAM
 - Impersonate the API cloud run service account to ensure authentication to the vector stores
@@ -79,7 +79,7 @@ To run the Survey Assist API **locally** and the SIC and SOC vector stores or SA
 - Set one or both services GCP URL (see cloud run details in console):
   - ```export SIC_VECTOR_STORE=https://URL-TO-SIC-VECTOR-SERVICE```
   - ```export SOC_VECTOR_STORE=https://URL-TO-SOC-VECTOR-SERVICE```
-  - ```export SAYT_SERVICE=https://URL-TO-SAYT-SERVICE```
+  - ```export SAYT_VECTOR_STORE=https://URL-TO-SAYT-VECTOR-STORE```
 
 ##### Survey Assist running locally, vector and SAYT services running locally
 
@@ -93,7 +93,7 @@ To run the Survey Assist API, SIC and SOC vector stores in **locally** you must:
 - By default the API will assume the vector store is local:
   - ```unset SIC_VECTOR_STORE```
   - ```unset SOC_VECTOR_STORE```
-  - ```unset SAYT_SERVICE```
+  - ```unset SAYT_VECTOR_STORE```
 
 #### Run the Application Locally
 
