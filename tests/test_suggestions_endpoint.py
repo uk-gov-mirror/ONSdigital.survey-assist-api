@@ -126,6 +126,22 @@ def test_suggestions_rejects_query_over_max_length() -> None:
 
 
 @pytest.mark.api
+def test_suggestions_rejects_limit_over_maximum() -> None:
+    """Reject a limit greater than 50 with 422."""
+    mock_client = AsyncMock(spec=SAYTClient)
+    _setup_sayt_client_override(mock_client)
+
+    response = TestClient(app).post(
+        "/v1/survey-assist/suggestions",
+        json={"type": "sic", "query": "soft", "limit": 51},
+    )
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert "less than or equal to 50" in response.text
+    mock_client.suggest.assert_not_awaited()
+
+
+@pytest.mark.api
 def test_suggestions_maps_client_unavailable_to_503() -> None:
     """Surface SAYT client failures as 503."""
     mock_client = AsyncMock(spec=SAYTClient)
