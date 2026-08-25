@@ -33,7 +33,7 @@ async def test_get_status_passes_provider_headers_to_http_client() -> None:
 
     token_provider.get_headers.assert_awaited_once_with()
     http_client.get.assert_awaited_once_with(
-        "http://localhost:8088/v1/sic-vector-store/status",
+        "http://localhost:8088/v1/configuration",
         headers={"Authorization": "Bearer test-token"},
     )
 
@@ -75,13 +75,54 @@ async def test_search_passes_provider_headers_to_http_client() -> None:
     assert result == expected_results
     token_provider.get_headers.assert_awaited_once_with()
     http_client.post.assert_awaited_once_with(
-        "http://localhost:8088/v1/sic-vector-store/search-index",
+        "http://localhost:8088/v1/search-index",
         json={
-            "industry_descr": "Health care provider",
-            "job_title": "Nurse",
-            "job_description": "Provides patient care",
+            "query": [
+                "Health care provider",
+                "Nurse",
+                "Provides patient care",
+            ]
         },
         headers={"Authorization": "Bearer test-token"},
+    )
+
+
+@pytest.mark.api
+@pytest.mark.asyncio
+async def test_get_status_maps_embed_core_model_name() -> None:
+    """Flatten backend.settings.embedding_model_name for the public status shape."""
+    token_provider = AsyncMock()
+    token_provider.get_headers.return_value = {}
+
+    response = Mock()
+    response.json.return_value = {
+        "status": "ready",
+        "db_dir": "vector_store",
+        "k_matches": 20,
+        "index_size": 100,
+        "backend": {
+            "backend_name": "classifai",
+            "settings": {
+                "embedding_model_name": "sentence-transformers/all-MiniLM-L6-v2"
+            },
+        },
+    }
+    response.raise_for_status.return_value = None
+
+    http_client = AsyncMock()
+    http_client.get.return_value = response
+
+    client = SICVectorStoreClient(
+        http_client=http_client,
+        token_provider=token_provider,
+    )
+
+    status = await client.get_status()
+
+    assert status["embedding_model_name"] == ("sentence-transformers/all-MiniLM-L6-v2")
+    http_client.get.assert_awaited_once_with(
+        "http://localhost:8088/v1/configuration",
+        headers={},
     )
 
 
