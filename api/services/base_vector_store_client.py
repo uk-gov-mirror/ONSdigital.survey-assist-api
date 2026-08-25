@@ -18,6 +18,26 @@ from utils.survey import truncate_identifier
 logger = get_logger(__name__)
 
 
+def _normalise_vector_store_status(result: dict[str, Any]) -> dict[str, Any]:
+    """Map merged vector-store configuration onto the API embeddings status shape.
+
+    ``survey-assist-vector-store-api`` returns embed-core ``EmbeddingStatus`` with
+    the model name under ``backend.settings.embedding_model_name``. Survey Assist
+    API still exposes the legacy flat ``embedding_model_name`` field.
+    """
+    if result.get("embedding_model_name"):
+        return result
+
+    backend = result.get("backend")
+    settings = backend.get("settings") if isinstance(backend, dict) else None
+    if isinstance(settings, dict):
+        model_name = settings.get("embedding_model_name")
+        if model_name:
+            return {**result, "embedding_model_name": model_name}
+
+    return result
+
+
 class BaseVectorStoreClient(ABC):  # pylint: disable=too-few-public-methods
     """Base client for vector store services.
 
@@ -110,6 +130,8 @@ class BaseVectorStoreClient(ABC):  # pylint: disable=too-few-public-methods
             )
             response.raise_for_status()
             result = response.json()
+            if isinstance(result, dict):
+                result = _normalise_vector_store_status(result)
             # Log only summary information, not full payloads
             summary: dict[str, Any] = (
                 {"keys": list(result.keys())[:5]}
@@ -195,9 +217,11 @@ class BaseVectorStoreClient(ABC):  # pylint: disable=too-few-public-methods
             response = await self._http_client.post(
                 url,
                 json={
-                    "industry_descr": industry_descr or "",
-                    "job_title": job_title,
-                    "job_description": job_description,
+                    "query": [
+                        industry_descr or "",
+                        job_title,
+                        job_description,
+                    ]
                 },
                 headers=headers,
             )
