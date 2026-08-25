@@ -696,7 +696,8 @@ curl -i "http://localhost:8080/v1/survey-assist/soc-lookup?description=senior%20
 ### Embeddings Endpoint
 - **Path**: `/v1/survey-assist/embeddings`
 - **Method**: GET
-- **Description**: Checks the status of the vector store service and its embeddings
+- **Description**: Checks the status of the SIC vector-store instance (`survey-assist-vector-store-api`) and its embeddings
+- **Downstream**: `GET {SIC_VECTOR_STORE}/v1/configuration`. The API maps `backend.settings.embedding_model_name` onto the public `embedding_model_name` field.
 - **Response**: Returns the current status of the vector store service
 - **Error Handling**: Returns a 503 Service Unavailable status if the vector store service is not accessible
 
@@ -710,8 +711,9 @@ The API integrates with the SIC Classification Library to provide:
 - Code division information
 
 ### Vector Store Service
-The API integrates with the Vector Store Service to provide:
-- Status checking for embeddings availability
+The API integrates with **`survey-assist-vector-store-api`** (separate SIC and SOC instances) to provide:
+- Status checking for embeddings availability via `GET /v1/configuration`
+- Shortlist search for classify via `POST /v1/search-index` with a `query` list
 - Error handling for service unavailability
 - Asynchronous communication with the vector store
 
@@ -1276,7 +1278,7 @@ curl -X POST "http://localhost:8080/v1/survey-assist/classify" \
   -d '{"llm": "gemini", "type": "sic", "job_title": "Test", "job_description": "Test description"}'
 
 # Check vector store status
-curl -X GET "http://localhost:8088/v1/sic-vector-store/status"
+curl -X GET "http://localhost:8088/v1/configuration"
 ```
 
 ### Best Practices
