@@ -108,7 +108,7 @@ async def test_suggest_maps_token_provider_error_to_503() -> None:
 @pytest.mark.api
 @pytest.mark.asyncio
 async def test_suggest_maps_http_error_to_503() -> None:
-    """Return 503 when the SAYT service request fails."""
+    """Return a sanitised 503 when the SAYT service request fails."""
     token_provider = AsyncMock()
     token_provider.get_headers.return_value = {}
     http_client = AsyncMock()
@@ -124,4 +124,28 @@ async def test_suggest_maps_http_error_to_503() -> None:
         await client.suggest(query="soft")
 
     assert exc_info.value.status_code == HTTPStatus.SERVICE_UNAVAILABLE
-    assert exc_info.value.detail == "Failed to search SAYT service: Connection error"
+    assert exc_info.value.detail == "Service is unavailable"
+    assert "Connection error" not in str(exc_info.value.detail)
+
+
+@pytest.mark.api
+@pytest.mark.asyncio
+async def test_suggest_maps_unexpected_error_to_500() -> None:
+    """Return a sanitised 500 when an unexpected error occurs."""
+    token_provider = AsyncMock()
+    token_provider.get_headers.return_value = {}
+    http_client = AsyncMock()
+    http_client.post.side_effect = RuntimeError("boom: secret internals")
+
+    client = SAYTClient(
+        base_url="http://localhost:8090",
+        http_client=http_client,
+        token_provider=token_provider,
+    )
+
+    with pytest.raises(HTTPException) as exc_info:
+        await client.suggest(query="soft")
+
+    assert exc_info.value.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert exc_info.value.detail == "Unexpected internal error"
+    assert "secret internals" not in str(exc_info.value.detail)
