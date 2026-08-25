@@ -295,7 +295,7 @@ async def test_get_status_connection_error():
 
     token_provider.get_headers.assert_awaited_once_with()
     mock_http_client.get.assert_awaited_once_with(
-        "http://nonexistent:8088/v1/sic-vector-store/status",
+        "http://nonexistent:8088/v1/configuration",
         headers={},
     )
 
