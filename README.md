@@ -79,7 +79,7 @@ To run the Survey Assist API **locally** and the SIC and SOC vector stores or SA
 - Set one or both services GCP URL (see cloud run details in console):
   - ```export SIC_VECTOR_STORE=https://URL-TO-SIC-VECTOR-SERVICE```
   - ```export SOC_VECTOR_STORE=https://URL-TO-SOC-VECTOR-SERVICE```
-  - ```export SAYT_VECTOR_STORE=https://URL-TO-SAYT-VECTOR-STORE```
+  - ```export SAYT_VECTOR_STORE=https://URL-TO-SAYT-VECTOR-SERVICE```
 
 ##### Survey Assist running locally, vector and SAYT services running locally
 
