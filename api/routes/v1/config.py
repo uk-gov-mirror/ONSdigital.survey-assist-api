@@ -88,9 +88,13 @@ async def _get_embedding_model(vector_store_client: SICVectorStoreClient) -> str
             return embedding_model_name or embedding_model_fallback
 
         backend = status.get("backend")
-        settings = backend.get("settings") if isinstance(backend, dict) else None
-        if isinstance(settings, dict) and settings.get("embedding_model_name"):
-            return settings["embedding_model_name"]
+        backend_settings = (
+            backend.get("settings") if isinstance(backend, dict) else None
+        )
+        if isinstance(backend_settings, dict) and backend_settings.get(
+            "embedding_model_name"
+        ):
+            return backend_settings["embedding_model_name"]
         return "unknown"
     except (HTTPException, ConnectionError, TimeoutError) as e:
         logger.warning(f"Could not retrieve embedding model from vector store: {e}")
