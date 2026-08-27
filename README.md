@@ -53,9 +53,9 @@ The API supports the following environment variables:
 
 - `GCP_PROJECT_ID`: Google Cloud Project ID
 - `FIRESTORE_DB_ID`: Firestore Database ID
-- `SAYT_SERVICE`: URL of the search as you type suggester service
-- `SAYT_VECTOR_STORE_AUTH_ENABLED`: Defaults to True. Set to False when the SAYT SERVICE runs locally or is a side-car deployment alongside the API in Cloud Run
-- `SIC_VECTOR_STORE`: URL of a SIC instance of `survey-assist-vector-store-api` (defaults to `http://localhost:8088`)
+- `SAYT_VECTOR_STORE`: URL of the search-as-you-type vector store service
+- `SAYT_VECTOR_STORE_AUTH_ENABLED`: Defaults to True. Set to False when the SAYT vector store runs locally or is a side-car deployment alongside the API in Cloud Run
+- `SIC_VECTOR_STORE`: URL of the vector store service
 - `SIC_VECTOR_STORE_AUTH_ENABLED`: Defaults to True. Set to False when the vector store runs locally or is a side-car deployment alongside the API in Cloud Run
 - `SIC_LOOKUP_DATA_PATH`: Path to SIC lookup data file
 - `SIC_REPHRASE_DATA_PATH`: Path to SIC rephrase data file 
@@ -66,7 +66,7 @@ The API supports the following environment variables:
 
 ##### Survey Assist running locally, one or more vector services running in GCP
 
-To run the Survey Assist API **locally** and the SIC and SOC vector stores or SAYT service in **GCP** you must:
+To run the Survey Assist API **locally** and the SIC and SOC vector stores or SAYT vector store in **GCP** you must:
 
 - Have the Service Account Token Creator role on your developer IAM
 - Impersonate the API cloud run service account to ensure authentication to the vector stores
@@ -79,7 +79,7 @@ To run the Survey Assist API **locally** and the SIC and SOC vector stores or SA
 - Set one or both services GCP URL (see cloud run details in console):
   - ```export SIC_VECTOR_STORE=https://URL-TO-SIC-VECTOR-SERVICE```
   - ```export SOC_VECTOR_STORE=https://URL-TO-SOC-VECTOR-SERVICE```
-  - ```export SAYT_SERVICE=https://URL-TO-SAYT-SERVICE```
+  - ```export SAYT_VECTOR_STORE=https://URL-TO-SAYT-VECTOR-SERVICE```
 
 ##### Survey Assist running locally, vector and SAYT services running locally
 
@@ -90,14 +90,10 @@ To run the Survey Assist API against local `survey-assist-vector-store-api` inst
   - ```export SIC_VECTOR_STORE_AUTH_ENABLED=false```
 - Set SAYT service to have auth disabled:
   - ```export SAYT_VECTOR_STORE_AUTH_ENABLED=false```
-- By default the API assumes local vector-store instances:
-  - ```unset SIC_VECTOR_STORE``` → `http://localhost:8088`
-  - ```unset SOC_VECTOR_STORE``` → `http://localhost:8089`
-  - ```unset SAYT_SERVICE```
-- Run SIC and SOC as **two** `survey-assist-vector-store-api` vector-store processes (same image/codebase, different `VECTOR_STORE_DIR` / artifacts and ports). The API calls:
-  - `GET {SIC|SOC}_VECTOR_STORE/v1/configuration`
-  - `POST {SIC|SOC}_VECTOR_STORE/v1/search-index` with `{ "query": [industry_descr, job_title, job_description] }`
-- Note: the vector-store-api local compose defaults SAYT to port `8089`. If you also run SAYT from that compose file, put the SOC vector-store instance on another port and set `SOC_VECTOR_STORE` accordingly.
+- By default the API will assume the vector store is local:
+  - ```unset SIC_VECTOR_STORE```
+  - ```unset SOC_VECTOR_STORE```
+  - ```unset SAYT_VECTOR_STORE```
 
 #### Run the Application Locally
 

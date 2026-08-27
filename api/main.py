@@ -23,6 +23,7 @@ from api.routes.v1.feedback import router as feedback_router
 from api.routes.v1.result import router as result_router
 from api.routes.v1.sic_lookup import router as sic_lookup_router
 from api.routes.v1.soc_lookup import router as soc_lookup_router
+from api.routes.v1.suggestions import router as suggestions_router
 from api.services.firestore_client import init_firestore_client
 from api.services.sayt_client import SAYTClient
 from api.services.sic_lookup_client import SICLookupClient
@@ -41,7 +42,7 @@ logger = get_logger(__name__)
 
 DEFAULT_SIC_VECTOR_STORE_URL = "http://localhost:8088"
 DEFAULT_SOC_VECTOR_STORE_URL = "http://localhost:8089"
-DEFAULT_SAYT_SERVICE_URL = "http://localhost:8090"
+DEFAULT_SAYT_VECTOR_STORE_URL = "http://localhost:8090"
 
 
 def vector_store_auth_enabled(vector_store_name: str) -> bool:
@@ -100,21 +101,20 @@ def resolve_soc_vector_store_base_url() -> str:
     return DEFAULT_SOC_VECTOR_STORE_URL
 
 
-def resolve_sayt_service_base_url() -> str:
-    """Resolve the SAYT service base URL from environment or default."""
-    env_url = os.getenv("SAYT_SERVICE")
-
+def resolve_sayt_vector_store_base_url() -> str:
+    """Resolve the SAYT vector store base URL from environment or default."""
+    env_url = os.getenv("SAYT_VECTOR_STORE")
     if env_url and env_url.strip():
         logger.info(
-            f"Using SAYT service URL from environment: "
+            f"Using SAYT vector store URL from environment: "
             f"{env_url.strip().rstrip('/')}"
         )
         return env_url.strip().rstrip("/")
 
     logger.warning(
-        "SAYT_SERVICE environment variable not set, using default localhost URL"
+        "SAYT_VECTOR_STORE environment variable not set, using default localhost URL"
     )
-    return DEFAULT_SAYT_SERVICE_URL
+    return DEFAULT_SAYT_VECTOR_STORE_URL
 
 
 @asynccontextmanager
@@ -182,7 +182,7 @@ async def lifespan(fastapi_app: FastAPI):
 
     sic_url = resolve_sic_vector_store_base_url()
     soc_url = resolve_soc_vector_store_base_url()
-    sayt_url = resolve_sayt_service_base_url()
+    sayt_url = resolve_sayt_vector_store_base_url()
 
     sic_token_provider = create_vector_store_token_provider("sic", sic_url)
     soc_token_provider = create_vector_store_token_provider("soc", soc_url)
@@ -207,7 +207,6 @@ async def lifespan(fastapi_app: FastAPI):
         http_client=shared_http_client,
         token_provider=sayt_token_provider,
     )
-
     logger.info(
         "Application clients initialised",
         sic_llm=type(fastapi_app.state.gemini_llm).__name__,
@@ -258,6 +257,7 @@ app.include_router(config_router, prefix="/v1/survey-assist")
 app.include_router(embeddings_router, prefix="/v1/survey-assist")
 app.include_router(sic_lookup_router, prefix="/v1/survey-assist")
 app.include_router(soc_lookup_router, prefix="/v1/survey-assist")
+app.include_router(suggestions_router, prefix="/v1/survey-assist")
 app.include_router(classify_router, prefix="/v1/survey-assist")
 app.include_router(result_router, prefix="/v1/survey-assist")
 app.include_router(feedback_router, prefix="/v1/survey-assist")

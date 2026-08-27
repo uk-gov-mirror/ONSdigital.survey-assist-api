@@ -8,6 +8,7 @@ The Survey Assist API is a FastAPI service that provides endpoints for both SIC 
 - **SOC classification**: Same endpoint with `type: "soc"` or `"sic_soc"` performs a two-step SOC classification (vector-store shortlist, then `unambiguous_soc_code`, then `formulate_open_question` when not codable).
 - **SIC lookup**: `GET /v1/survey-assist/sic-lookup` looks up SIC codes by description (with optional similarity search).
 - **SOC lookup**: `GET /v1/survey-assist/soc-lookup` looks up SOC codes by description (with optional similarity search).
+- **Suggestions**: `POST /v1/survey-assist/suggestions` returns typeahead suggestions from the SAYT service (`type: "sic"`).
 - **Vector store status**: `GET /v1/survey-assist/embeddings` checks whether SIC embeddings are ready to query.
 - **Configuration introspection**: `GET /v1/survey-assist/config` returns the LLM model name, embedding model (from the vector store), and prompt templates.
 - **Firestore-backed persistence (optional)**:
@@ -36,8 +37,8 @@ For detailed information on installation, setup, and usage, please refer to the 
 - **`SOC_LOOKUP_DATA_PATH`**: Optional path to a SOC lookup CSV. If unset, packaged example data is used.
 - **`SOC_REPHRASE_DATA_PATH`**: Optional path to a rephrased SOC CSV. If unset, packaged example data is used.
 - **`SOC_VECTOR_STORE_AUTH_ENABLED`**: Optional, default is set to True.  Set as False when running the API and Vector Store locally or the Vector Store is a side-car deployment alongside the API in Cloud Run
-- **`SAYT_SERVICE`**: Base URL for the SAYT service from `survey-assist-vector-store-api` (defaults to `http://localhost:8090`).
-- **`SAYT_VECTOR_STORE_AUTH_ENABLED`**: Optional, default is set to True. Set as False when running the API and SAYT service locally or the SAYT service is a side-car deployment alongside the API in Cloud Run
+- **`SAYT_VECTOR_STORE`**: Base URL for the SAYT vector store (defaults to `http://localhost:8090`).
+- **`SAYT_VECTOR_STORE_AUTH_ENABLED`**: Optional, default is set to True. Set as False when running the API and SAYT vector store locally or the SAYT vector store is a side-car deployment alongside the API in Cloud Run
 - **`FIRESTORE_DB_ID`**: Enables Firestore-backed endpoints when set; if unset, result/feedback endpoints will fail because the Firestore client is not initialised.
 - **`GCP_PROJECT_ID`**: Optional; used when initialising Firestore.
 

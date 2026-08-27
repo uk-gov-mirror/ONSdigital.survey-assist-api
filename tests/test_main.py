@@ -26,7 +26,7 @@ from survey_assist_utils.logging import get_logger
 from api.main import (
     app,
     create_vector_store_token_provider,
-    resolve_sayt_service_base_url,
+    resolve_sayt_vector_store_base_url,
     resolve_sic_vector_store_base_url,
     resolve_soc_vector_store_base_url,
     vector_store_auth_enabled,
@@ -98,20 +98,26 @@ logger = get_logger(__name__)
             "http://localhost:8089",
         ),
         (
-            "SAYT_SERVICE",
-            resolve_sayt_service_base_url,
+            "SAYT_VECTOR_STORE",
+            resolve_sayt_vector_store_base_url,
             "  http://sayt.internal:8090  ",
             "http://sayt.internal:8090",
         ),
         (
-            "SAYT_SERVICE",
-            resolve_sayt_service_base_url,
+            "SAYT_VECTOR_STORE",
+            resolve_sayt_vector_store_base_url,
             "https://sayt.example/",
             "https://sayt.example",
         ),
         (
-            "SAYT_SERVICE",
-            resolve_sayt_service_base_url,
+            "SAYT_VECTOR_STORE",
+            resolve_sayt_vector_store_base_url,
+            "  https://sayt.example///  ",
+            "https://sayt.example",
+        ),
+        (
+            "SAYT_VECTOR_STORE",
+            resolve_sayt_vector_store_base_url,
             None,
             "http://localhost:8090",
         ),
@@ -136,12 +142,11 @@ def test_resolve_vector_store_base_url_uses_expected_value(
 @pytest.mark.api
 @pytest.mark.asyncio
 async def test_service_clients_share_http_client():
-    """SIC and SOC vector store clients share one injected HTTP client."""
+    """SIC, SOC, and SAYT clients share one injected HTTP client."""
     shared_http_client = httpx.AsyncClient()
     sic_token_provider = AsyncMock()
     soc_token_provider = AsyncMock()
     sayt_token_provider = AsyncMock()
-
     try:
         sic_client = SICVectorStoreClient(
             base_url=resolve_sic_vector_store_base_url(),
@@ -154,7 +159,7 @@ async def test_service_clients_share_http_client():
             token_provider=soc_token_provider,
         )
         sayt_client = SAYTClient(
-            base_url=resolve_sayt_service_base_url(),
+            base_url=resolve_sayt_vector_store_base_url(),
             http_client=shared_http_client,
             token_provider=sayt_token_provider,
         )
