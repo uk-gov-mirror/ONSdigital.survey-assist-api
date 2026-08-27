@@ -1,5 +1,8 @@
 """Tests for the SAYT client."""
 
+# Auth-failure mapping tests intentionally mirror vector-store client tests.
+# pylint: disable=duplicate-code
+
 from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock
 
