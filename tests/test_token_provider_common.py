@@ -11,7 +11,7 @@ from fastapi import HTTPException
 
 from api.services.token_provider import TokenProviderError
 
-_DEFAULT_TOKEN_PROVIDER_ERROR = (
+_DEFAULT_AUTH_PERMISSION_DENIED = (
     "Permission iam.serviceAccounts.getOpenIdToken denied"
 )
 
@@ -20,7 +20,7 @@ def mocks_for_token_provider_auth_failure() -> tuple[AsyncMock, AsyncMock]:
     """Return token provider and HTTP client mocks that fail authentication."""
     token_provider = AsyncMock()
     token_provider.get_headers.side_effect = TokenProviderError(
-        _DEFAULT_TOKEN_PROVIDER_ERROR
+        _DEFAULT_AUTH_PERMISSION_DENIED
     )
     return token_provider, AsyncMock()
 
