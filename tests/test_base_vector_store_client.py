@@ -1,13 +1,15 @@
 """Tests for the base vector store client behaviour."""
 
-from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock
 
 import pytest
 from fastapi import HTTPException
 
 from api.services.sic_vector_store_client import SICVectorStoreClient
-from api.services.token_provider import TokenProviderError
+from tests.test_token_provider_common import (
+    assert_sanitised_auth_failure_503,
+    mocks_for_token_provider_auth_failure,
+)
 
 
 @pytest.mark.api
@@ -130,12 +132,7 @@ async def test_get_status_maps_embed_core_model_name() -> None:
 @pytest.mark.asyncio
 async def test_get_status_maps_token_provider_error_to_503() -> None:
     """Return a sanitised 503 when status authentication fails."""
-    token_provider = AsyncMock()
-    token_provider.get_headers.side_effect = TokenProviderError(
-        "Permission iam.serviceAccounts.getOpenIdToken denied"
-    )
-
-    http_client = AsyncMock()
+    token_provider, http_client = mocks_for_token_provider_auth_failure()
 
     client = SICVectorStoreClient(
         http_client=http_client,
@@ -145,10 +142,10 @@ async def test_get_status_maps_token_provider_error_to_503() -> None:
     with pytest.raises(HTTPException) as exc_info:
         await client.get_status()
 
-    assert exc_info.value.status_code == HTTPStatus.SERVICE_UNAVAILABLE
-    assert exc_info.value.detail == ("Unable to authenticate to SIC vector store")
-    assert "getOpenIdToken" not in str(exc_info.value.detail)
-
+    assert_sanitised_auth_failure_503(
+        exc_info.value,
+        "Unable to authenticate to SIC vector store",
+    )
     token_provider.get_headers.assert_awaited_once_with()
     http_client.get.assert_not_awaited()
 
@@ -157,12 +154,7 @@ async def test_get_status_maps_token_provider_error_to_503() -> None:
 @pytest.mark.asyncio
 async def test_search_maps_token_provider_error_to_503() -> None:
     """Return a sanitised 503 when search authentication fails."""
-    token_provider = AsyncMock()
-    token_provider.get_headers.side_effect = TokenProviderError(
-        "Permission iam.serviceAccounts.getOpenIdToken denied"
-    )
-
-    http_client = AsyncMock()
+    token_provider, http_client = mocks_for_token_provider_auth_failure()
 
     client = SICVectorStoreClient(
         http_client=http_client,
@@ -177,9 +169,9 @@ async def test_search_maps_token_provider_error_to_503() -> None:
             correlation_id="test-correlation-id",
         )
 
-    assert exc_info.value.status_code == HTTPStatus.SERVICE_UNAVAILABLE
-    assert exc_info.value.detail == ("Unable to authenticate to SIC vector store")
-    assert "getOpenIdToken" not in str(exc_info.value.detail)
-
+    assert_sanitised_auth_failure_503(
+        exc_info.value,
+        "Unable to authenticate to SIC vector store",
+    )
     token_provider.get_headers.assert_awaited_once_with()
     http_client.post.assert_not_awaited()
