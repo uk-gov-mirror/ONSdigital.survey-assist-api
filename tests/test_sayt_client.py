@@ -1,8 +1,5 @@
 """Tests for the SAYT client."""
 
-# Auth-failure mapping tests intentionally mirror vector-store client tests.
-# pylint: disable=duplicate-code
-
 from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock
 
@@ -11,7 +8,10 @@ import pytest
 from fastapi import HTTPException
 
 from api.services.sayt_client import SAYTClient
-from api.services.token_provider import TokenProviderError
+from tests.test_token_provider_common import (
+    assert_sanitised_auth_failure_503,
+    mocks_for_token_provider_auth_failure,
+)
 
 
 @pytest.mark.api
@@ -87,11 +87,7 @@ async def test_suggest_omits_limit_when_not_provided() -> None:
 @pytest.mark.asyncio
 async def test_suggest_maps_token_provider_error_to_503() -> None:
     """Return a sanitised 503 when SAYT authentication fails."""
-    token_provider = AsyncMock()
-    token_provider.get_headers.side_effect = TokenProviderError(
-        "Permission iam.serviceAccounts.getOpenIdToken denied"
-    )
-    http_client = AsyncMock()
+    token_provider, http_client = mocks_for_token_provider_auth_failure()
 
     client = SAYTClient(
         base_url="http://localhost:8090",
@@ -102,9 +98,10 @@ async def test_suggest_maps_token_provider_error_to_503() -> None:
     with pytest.raises(HTTPException) as exc_info:
         await client.suggest(query="soft")
 
-    assert exc_info.value.status_code == HTTPStatus.SERVICE_UNAVAILABLE
-    assert exc_info.value.detail == "Unable to authenticate to SAYT service"
-    assert "getOpenIdToken" not in str(exc_info.value.detail)
+    assert_sanitised_auth_failure_503(
+        exc_info.value,
+        "Unable to authenticate to SAYT service",
+    )
     http_client.post.assert_not_awaited()
 
 
